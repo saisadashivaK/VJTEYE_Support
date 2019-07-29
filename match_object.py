@@ -8,6 +8,8 @@ def detect_signboard(output_dict, min_threshold_value):
     detection_scores = detection_scores[keys]
     detection_scores = detection_scores[detection_scores > min_threshold_value]
     detection_boxes = detection_boxes[0:len(detection_scores)]
+    # tree type structure for searching
+    # template matching - slide the picture over entire bounfing box to eliminate false positives and match particular objects
      
     
     
