@@ -56,6 +56,7 @@ def detect_signboard(output_dict, min_threshold_value, frame, dir_name):
                     detected = False
             if detected is False:
                 print("Not found anything")
+            return final_frame
                     
         
            
