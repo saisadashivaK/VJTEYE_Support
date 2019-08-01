@@ -19,10 +19,10 @@ def match(frame, ref_img, box_img, threshold):
     return frame, flag
         
 def denormalize_coordinates(x1, x2, y1, y2, img):
-    x1 = x1*img.shape[0]
-    x2 = x2*img.shape[0]
-    y1 = y1*img.shape[1]
-    y2 = y2*img.shape[1]
+    x1 = x1*img.shape[1]
+    x2 = x2*img.shape[1]
+    y1 = (1 - y1)*img.shape[0]
+    y2 = (1 - y2)*img.shape[0]
     return x1, x2, y1, y2
 
 def detect_signboard(output_dict, min_threshold_value, frame, dir_name):
