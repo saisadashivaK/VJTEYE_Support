@@ -18,7 +18,7 @@ def match(frame, ref_img, box_img, threshold, coordinates):
         print(*coordinates)
         pt1 = (int(coordinates[0]), int(coordinates[1]))
         pt2 = (int(coordinates[2]), int(coordinates[3]))
-        cv2.rectangle(frame, pt1, pt2, (255, 255, 255))
+        cv2.rectangle(frame, pt1, pt2, (0, 255, 255), 9)
         flag = True
     return frame, flag
         
@@ -50,12 +50,15 @@ def detect_signboard(output_dict, min_threshold_value, frame, dir_name):
     
     # tree type structure for searching
     # template matching - slide the picture over entire bounding box to eliminate false positives and match particular objects
-    index = 0
     print(detection_boxes.shape)
+    print(detection_classes)
     for y1, x1, y2, x2 in detection_boxes:
         x1, x2, y1, y2 = denormalize_coordinates(x1, x2, y1, y2, frame)
         coordinates = [x1, y1, x2, y2]
         isDetected = False
+        index = 0
+
+        
         for ref_img_filename in os.listdir(dir_name + '/' + str(detection_classes[index])):
              box_img = frame[int(y1) : int(y2), int(x1) : int(x2)]
              
@@ -66,13 +69,13 @@ def detect_signboard(output_dict, min_threshold_value, frame, dir_name):
 ##             cv2.waitKey(0)
              final_frame, flag = match(frame, ref_img, box_img, min_threshold_value, coordinates)
 
-             index += 1
-             
              if flag is True:
                     isDetected = True
                     break
+        index = 0
+
         if isDetected is True:
-             break
+             print("detected")
         else:
             detected = True
             for detection_class in os.listdir(dir_name):

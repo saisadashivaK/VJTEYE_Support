@@ -233,7 +233,7 @@ for image_path in TEST_IMAGE_PATHS:
 ##      line_thickness=8)
   image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
 
-  image_np = match.detect_signboard(output_dict_1, 0.5, image_np, 'pos3')
+  image_np = match.detect_signboard(output_dict_1, 0.19, image_np, 'pos3')
 
 ##  vis_util.visualize_boxes_and_labels_on_image_array(
 ##      image_np,
