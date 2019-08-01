@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+ #!/usr/bin/env python
 # coding: utf-8
 
 # # Object Detection Demo
@@ -17,6 +17,7 @@ import tarfile
 import tensorflow as tf
 import zipfile
 import cv2
+import match_object as match
 
 from distutils.version import StrictVersion
 from collections import defaultdict
@@ -142,7 +143,7 @@ def load_image_into_numpy_array(image):
 # image2.jpg
 # If you want to test the code with your images, just add path to the images to the TEST_IMAGE_PATHS.
 PATH_TO_TEST_IMAGES_DIR = 'test_images'
-TEST_IMAGE_PATHS = [ os.path.join(PATH_TO_TEST_IMAGES_DIR, 'image{}.jpg'.format(i)) for i in range(1, 18) ]
+TEST_IMAGE_PATHS = [ os.path.join(PATH_TO_TEST_IMAGES_DIR, 'image{}.jpg'.format(i)) for i in range(1, 20)]
 
 # Size, in inches, of the output images.
 IMAGE_SIZE = (12, 8)
@@ -152,7 +153,7 @@ IMAGE_SIZE = (12, 8)
 
 
 def run_inference_for_single_image(image, graph):
-  with graph.as_default():
+  with graph.as_default():  
     with tf.Session() as sess:
       # Get handles to input and output tensors
       ops = tf.get_default_graph().get_operations()
@@ -167,7 +168,7 @@ def run_inference_for_single_image(image, graph):
         if tensor_name in all_tensor_names:
           tensor_dict[key] = tf.get_default_graph().get_tensor_by_name(
               tensor_name)
-        
+          
       if 'detection_masks' in tensor_dict:
         # The following processing is only for single image
         detection_boxes = tf.squeeze(tensor_dict['detection_boxes'], [0])
@@ -197,8 +198,8 @@ def run_inference_for_single_image(image, graph):
       output_dict['detection_scores'] = output_dict['detection_scores'][0]
       if 'detection_masks' in output_dict:
         output_dict['detection_masks'] = output_dict['detection_masks'][0]
-      print(output_dict['detection_scores'].shape, " ", np.max(output_dict['detection_scores']))
-      print(np.max(output_dict['detection_classes']), " ", output_dict['detection_classes'].dtype)
+##      print(output_dict['detection_scores'].shape, " ", np.max(output_dict['detection_scores']))
+##      print(output_dict['detection_classes'], " ", output_dict['detection_classes'].dtype)
 
   return output_dict
   
@@ -212,22 +213,28 @@ for image_path in TEST_IMAGE_PATHS:
   # the array based representation of the image will be used later in order to prepare the
   # result image with boxes and labels on it.
   image_np = load_image_into_numpy_array(image)
+  print('image_np ', image_np.shape)
   # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
   image_np_expanded = np.expand_dims(image_np, axis=0)
+  print("np_expanded ", image_np_expanded.shape)
   # Actual detection.
   output_dict_1 = run_inference_for_single_image(image_np_expanded, detection_graph_1)
 ##  output_dict_2 = run_inference_for_single_image(image_np_expanded, detection_graph_2)
 
   # Visualization of the results of a detection.
-  vis_util.visualize_boxes_and_labels_on_image_array(
-      image_np,
-      output_dict_1['detection_boxes'],
-      output_dict_1['detection_classes'],
-      output_dict_1['detection_scores'],
-      category_index_1,
-##      instance_masks=output_dict_1.get('detection_masks'),
-      use_normalized_coordinates=True,
-      line_thickness=8)
+##  vis_util.visualize_boxes_and_labels_on_image_array(
+##      image_np,
+##      output_dict_1['detection_boxes'],
+##      output_dict_1['detection_classes'],
+##      output_dict_1['detection_scores'],
+##      category_index_1,
+####      instance_masks=output_dict_1.get('detection_masks'),
+##      use_normalized_coordinates=True,
+##      line_thickness=8)
+  image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+
+  image_np = match.detect_signboard(output_dict_1, 0.5, image_np, 'pos3')
+
 ##  vis_util.visualize_boxes_and_labels_on_image_array(
 ##      image_np,
 ##      output_dict_2['detection_boxes'],
@@ -240,7 +247,6 @@ for image_path in TEST_IMAGE_PATHS:
 ##  plt.figure(figsize=IMAGE_SIZE)
 ##  plt.imshow(image_np)
 ##  plt.show()
-  image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
   cv2.imshow("Detected image", image_np)
   cv2.waitKey(0)
 cv2.destroyAllWindows()
