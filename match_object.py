@@ -3,25 +3,45 @@ import numpy as np
 import os
 
 
+# decision_tree: first parameter is aspect_ratio : error in aspect ratio should be below 2%
+# second level will contain match template aspect ratio matches
+# if aspect ratio does not match:
+# find homography matrix using features, transform the image and then do template matching
+# compare histograms after template matching
+
+
 def match(frame, ref_img, box_img, threshold, coordinates):
     flag = False
     
     box_img_gray = cv2.cvtColor(box_img, cv2.COLOR_BGR2GRAY)
     ref_img_gray = cv2.cvtColor(ref_img, cv2.COLOR_BGR2GRAY)
     ref_img_gray = cv2.resize(ref_img_gray, (box_img.shape[1], box_img.shape[0]))
+    ref_img_resized = cv2.resize(ref_img, (box_img.shape[1], box_img.shape[0]))
+
     res = cv2.matchTemplate(box_img_gray, ref_img_gray, cv2.TM_SQDIFF_NORMED)
     ##cv2.imshow("EXP", res)
     ##cv2.waitKey(0)
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+    orb = cv2.ORB_create()
+    kp1, des1 = orb.detectAndCompute(box_img_gray, mask=None)
+    kp2, des2 = orb.detectAndCompute(ref_img_gray, mask=None)
+
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    matches = bf.match(des1, des2)
+#   matches = sorted(matches, lambda x: x.distance)
+    
     print("Matching value  ", min_val)
-    if min_val < threshold:
+    if len(matches) > 20: ##and min_val < threshold:
         print(*coordinates)
         pt1 = (int(coordinates[0]), int(coordinates[1]))
         pt2 = (int(coordinates[2]), int(coordinates[3]))
-        cv2.rectangle(frame, pt1, pt2, (0, 255, 255), 9)
+#       cv2.rectangle(frame, pt1, pt2, (0, 255, 255), 9)
+        img3 = cv2.drawMatches(box_img_gray,kp1,ref_img_gray,kp2,matches[:20], flags=2, outImg=None)
+        cv2.imshow("matching", img3)
         flag = True
     return frame, flag
-        
+
+
 def denormalize_coordinates(x1, x2, y1, y2, img):
     x1 = x1*img.shape[1]
     x2 = x2*img.shape[1]
@@ -29,29 +49,26 @@ def denormalize_coordinates(x1, x2, y1, y2, img):
     y2 = y2*img.shape[0]
     return x1, x2, y1, y2
 
+
 def detect_signboard(output_dict, min_threshold_value, frame, dir_name):
-##    print("Not sorted\n", output_dict['detection_scores'][:20])
-##    print("Not sorted\n", output_dict['detection_boxes'][:20])
-##    keys = output_dict['detection_scores'].argsort()
-##    print(keys)
+
     detection_boxes = output_dict['detection_boxes']
-##    
+  
     detection_classes = output_dict['detection_classes']
     detection_scores = output_dict['detection_scores']
-##    print("Sorted\n", output_dict['detection_scores'][:20])
-##    print("Sorted\n", output_dict['detection_boxes'][:20])
+
     detection_scores = detection_scores[detection_scores > min_threshold_value]
     detection_boxes = detection_boxes[0:len(detection_scores)]
     detection_classes = detection_classes[0:len(detection_scores)]
     if frame is not None:
         print("frame exists")
     
-    
+    class_dict = {'1': 'Brownboard', '2': 'Layoutboard1', '3': 'Non-blueboard', '4': 'Rectangle_blueboard1', '5': 'Square_blueboard', '6': 'Rectangle_blueboard2', '7': 'Bigboard', \
+                  '8': 'Layoutboard2'}
     
     # tree type structure for searching
     # template matching - slide the picture over entire bounding box to eliminate false positives and match particular objects
-    print(detection_boxes.shape)
-    print(detection_classes)
+##    print(detection_boxes.shape)
     for y1, x1, y2, x2 in detection_boxes:
         x1, x2, y1, y2 = denormalize_coordinates(x1, x2, y1, y2, frame)
         coordinates = [x1, y1, x2, y2]
@@ -72,7 +89,7 @@ def detect_signboard(output_dict, min_threshold_value, frame, dir_name):
              if flag is True:
                     isDetected = True
                     break
-        index = 0
+        index += 1
 
         if isDetected is True:
              print("detected")
