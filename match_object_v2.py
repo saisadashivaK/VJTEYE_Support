@@ -94,7 +94,8 @@ def match(frame, ref_img, box_img, threshold, box, matchHistogram = False):
                 scores_dict.update({"template_match" : (1/zero_check(min_val))*weight_dict["template_match"]})
             else:
                 scores_dict.update({"template_match" : (1/min_val)*(1 - weight_dict["template_match"])})
-
+            if matchHistogram is True:
+                
     
 
 def main():
