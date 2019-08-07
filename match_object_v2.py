@@ -12,7 +12,7 @@ label_dict = {1 : "brownboard",\
               6 : "rectangle_blueboard2", \
               7 : "bigboard", \
               8 : "layout_board2"}
-weight_dict = {"aspect_ratio" : 0.7, "template_match" : 0.85, "feature_match" : 0.6}
+weight_dict = {"aspect_ratio" : 0.7, "template_match" : 0.85, "histogram_match" : 0.6}
 # error function to be used is
 def swap(a, b):
     a = a + b
@@ -54,7 +54,7 @@ def zero_check(num):
     if num == 0.0:
         return 0.1**3
 
-def match(frame, ref_img, box_img, threshold, box, matchHistogram = False):
+def match(frame, ref_img, box_img, threshold, box, matchHistogram=False, histThresh=0.5):
     flag = false
     scores_dict = {}
     try:
@@ -95,9 +95,12 @@ def match(frame, ref_img, box_img, threshold, box, matchHistogram = False):
             else:
                 scores_dict.update({"template_match" : (1/min_val)*(1 - weight_dict["template_match"])})
         feature_and_template_match()
-        #hist1 = cv2.calcHist([img1],[0],None,[256],[0,256])
-        #hist2 = cv2.calcHist([img2],[0],None,[256],[0,256])
-        #res = cv2.compareHist(hist1, hist2, 3)
+        if matchHistogram is true:
+          hist1 = cv2.calcHist([final_template_grey],[0],None,[256],[0,256])
+          hist2 = cv2.calcHist([box_img_grey],[0],None,[256],[0,256])
+          res = cv2.compareHist(hist1, hist2, 3)
+          if res < histThresh
+            scores_dict.update({"histogram_match : (1/zero_check(res))"})
         
                 
     
