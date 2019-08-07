@@ -99,10 +99,16 @@ def match(frame, ref_img, box_img, threshold, box, matchHistogram=False, histThr
           hist1 = cv2.calcHist([final_template_grey],[0],None,[256],[0,256])
           hist2 = cv2.calcHist([box_img_grey],[0],None,[256],[0,256])
           res = cv2.compareHist(hist1, hist2, 3)
-          if res < histThresh
-            scores_dict.update({"histogram_match : (1/zero_check(res))"})
-        
-                
+          if res < histThresh:
+            scores_dict.update({"histogram_match" : (1/zero_check(res))*weight_dict["histogram_match"]})
+          else:
+            scores_dict.update({"histogram_match" : (1/res)*(1 - weight_dict["histogram_match"])})
+        else:
+          scores_dict.update({"histogram_match" : 0})
+        total_score = sum(scores_dict.values())/3
+        print(score) 
+    except Exception as e:
+        print("ERROR: In function match() ", e)
     
 
 def main():
@@ -111,4 +117,4 @@ def main():
 ##    print("Test error function for 5.5, 5.7 ", err_fn(5.5, 5.7))
 ##    print("Test error function for 0.5, 0.7 ", err_fn(0.5, 0.7))
     print("Test for aspect_ratio x1 = 200, y1 = 100, x2 = 150, y2 = 100 ", aspect_ratio([200, 100, 150, 100]))
-main()
+
